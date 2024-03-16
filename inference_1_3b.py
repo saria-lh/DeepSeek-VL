@@ -24,7 +24,7 @@ from deepseek_vl.models import MultiModalityCausalLM, VLChatProcessor
 from deepseek_vl.utils.io import load_pil_images
 
 # specify the path to the model
-model_path = "deepseek-ai/deepseek-vl-7b-chat"
+model_path = "deepseek-ai/deepseek-vl-1.3b-chat"
 vl_chat_processor: VLChatProcessor = VLChatProcessor.from_pretrained(model_path)
 tokenizer = vl_chat_processor.tokenizer
 
@@ -36,7 +36,7 @@ vl_gpt = vl_gpt.to(torch.bfloat16).cuda().eval()
 conversation = [
     {
         "role": "User",
-        "content": "<image_placeholder>Describe each stage of this image.",
+        "content": "<image_placeholder>Describe this image briefly.",
         "images": ["./images/training_pipelines.jpg"],
     },
     {"role": "Assistant", "content": ""},
