@@ -23,6 +23,22 @@ from deepseek_vl.models import MultiModalityCausalLM, VLChatProcessor
 from deepseek_vl.utils.io import load_pil_images
 from read_vid import *
 # specify the path to the model
+
+
+# load images and prepare for inputs
+
+path = './vid2.mp4'
+path_without_extension = path.rsplit('.', 1)[0]
+audio_path = path_without_extension+'.mp3'
+txt_file = path_without_extension + '.txt'
+
+# selected_frames = read_video_frames_with_exact_timestamps_interval(path, 1) 
+selected_frames = select_active_frames_and_timestamps_every_second(path, 5) 
+print('Number of frames', len(selected_frames))
+frames_only = [f[1] for f in selected_frames]
+save_images_to_folder(frames_only, path_without_extension+'_images')
+extract_audio_from_video(path, audio_path)
+transcribed_text = transcribe(audio_path)
 model_path = "deepseek-ai/deepseek-vl-1.3b-chat"
 vl_chat_processor: VLChatProcessor = VLChatProcessor.from_pretrained(model_path)
 tokenizer = vl_chat_processor.tokenizer
@@ -40,15 +56,6 @@ conversation = [
     {"role": "Assistant", "content": ""},
 ]
 
-
-# load images and prepare for inputs
-
-path = './vid.mp4'
-path_without_extension = path.rsplit('.', 1)[0]
-txt_file = path_without_extension + '.txt'
-selected_frames = read_video_frames_with_exact_timestamps(path)
-frames_only = [f[1] for f in selected_frames]
-save_images_to_folder(frames_only, path_without_extension+'_images')
 for i, pil_im in enumerate(selected_frames):
     ts, im = pil_im
     prepare_inputs = vl_chat_processor(
@@ -71,9 +78,16 @@ for i, pil_im in enumerate(selected_frames):
     )
 
     answer = tokenizer.decode(outputs[0].cpu().tolist(), skip_special_tokens=True)
-    print(f"{prepare_inputs['sft_format'][0]}", answer)
+    print(f"{ts} \n {prepare_inputs['sft_format'][0]}", answer)
     with open(txt_file, 'a') as f:
         f.write(f'TS: {ts}\n')
         f.write(answer)
         f.write('\n\n')
+
+with open(txt_file, 'a') as f:
+    f.write(f'\nTranscribed_text:\n')
+    f.write(transcribed_text)
+
+
+
 
