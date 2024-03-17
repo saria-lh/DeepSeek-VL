@@ -1,42 +1,25 @@
-# Copyright (c) 2023-2024 DeepSeek.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in
-# the Software without restriction, including without limitation the rights to
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-# the Software, and to permit persons to whom the Software is furnished to do so,
-# subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+import argparse
 import torch
 from transformers import AutoModelForCausalLM
 from deepseek_vl.models import MultiModalityCausalLM, VLChatProcessor
 from deepseek_vl.utils.io import load_pil_images
 from read_vid import *
-# specify the path to the model
 
+# Set up argument parser
+parser = argparse.ArgumentParser(description="Process a video and generate descriptions.")
+parser.add_argument("--video_path", type=str, required=True, help="Path to the video file")
+args = parser.parse_args()
 
-# load images and prepare for inputs
-
-path = './vid2.mp4'
+# Use the provided video path
+path = args.video_path
 path_without_extension = path.rsplit('.', 1)[0]
-audio_path = path_without_extension+'.mp3'
+audio_path = path_without_extension + '.mp3'
 txt_file = path_without_extension + '.txt'
 
-# selected_frames = read_video_frames_with_exact_timestamps_interval(path, 1) 
-selected_frames = select_active_frames_and_timestamps_every_second(path, 5) 
+selected_frames = select_active_frames_and_timestamps_every_second(path, 5)
 print('Number of frames', len(selected_frames))
 frames_only = [f[1] for f in selected_frames]
-save_images_to_folder(frames_only, path_without_extension+'_images')
+save_images_to_folder(frames_only, path_without_extension + '_images')
 extract_audio_from_video(path, audio_path)
 transcribed_text = transcribe(audio_path)
 model_path = "deepseek-ai/deepseek-vl-1.3b-chat"
@@ -62,10 +45,8 @@ for i, pil_im in enumerate(selected_frames):
         conversations=conversation, images=[im], force_batchify=True
     ).to(vl_gpt.device)
 
-    # run image encoder to get the image embeddings
     inputs_embeds = vl_gpt.prepare_inputs_embeds(**prepare_inputs)
 
-    # run the model to get the response
     outputs = vl_gpt.language_model.generate(
         inputs_embeds=inputs_embeds,
         attention_mask=prepare_inputs.attention_mask,
@@ -87,7 +68,3 @@ for i, pil_im in enumerate(selected_frames):
 with open(txt_file, 'a') as f:
     f.write(f'\nTranscribed_text:\n')
     f.write(transcribed_text)
-
-
-
-
