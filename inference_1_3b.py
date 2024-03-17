@@ -16,7 +16,7 @@ path_without_extension = path.rsplit('.', 1)[0]
 audio_path = path_without_extension + '.mp3'
 txt_file = path_without_extension + '.txt'
 
-selected_frames = select_active_frames_and_timestamps_every_second(path, 5)
+selected_frames = read_video_frames_with_exact_timestamps(path, 2)
 print('Number of frames', len(selected_frames))
 frames_only = [f[1] for f in selected_frames]
 save_images_to_folder(frames_only, path_without_extension + '_images')
