@@ -20,9 +20,17 @@ async def create_upload_file(file: UploadFile = File(...)):
     subprocess.run(["python3", "inference_1_3b.py", "--video_path", video_path], check=True)
 
     if os.path.exists(txt_path):
-        return FileResponse(txt_path, media_type='application/octet-stream', filename=f"{video_id}.txt")
+        return {"message": "Done"}
     else:
         return {"error": "Failed to process video"}
+
+@app.get("/download-db/")
+async def download_db():
+    db_path = "/workspace/DeepSeek-VL/simple.db"
+    if os.path.exists(db_path):
+        return FileResponse(db_path, media_type='application/octet-stream', filename="simple.db")
+    else:
+        raise HTTPException(status_code=404, detail="Database not found")
 
 # Additional endpoint to check if the service is running
 @app.get("/")
